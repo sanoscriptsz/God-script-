@@ -1,0 +1,125 @@
+local config = {
+    esp_enabled = true,
+    aimbot_enabled = true,
+    aim_assist = true,
+    no_recoil = true,
+    fov = 150,
+    team_check = true
+}
+
+local function drawMenu()
+    print("===== MENU NEGRET =====")
+    print("1. ESP:", config.esp_enabled)
+    print("2. Aimbot:", config.aimbot_enabled)
+    print("3. Aim Assist:", config.aim_assist)
+    print("4. No Recoil:", config.no_recoil)
+    print("5. FOV:", config.fov)
+    print("6. Team Check:", config.team_check)
+end
+
+function toggle(option)
+    config[option] = not config[option]
+end
+
+-- Simulando função de ESP
+function drawESP(players)
+    for _, player in pairs(players) do
+        if player.isAlive and (not config.team_check or player.team ~= localPlayer.team) then
+            -- Desenha o nome ou caixa do jogador
+            print("[ESP] " .. player.name .. " - Pos: " .. tostring(player.position))
+        end
+    end
+end
+
+-- Aimbot simples com FOV
+function getClosestEnemy(players)
+    local closest = nil
+    local minDistance = config.fov
+
+    for _, player in pairs(players) do
+        if player.isAlive and (not config.team_check or player.team ~= localPlayer.team) then
+            local distance = getScreenDistance(player.position, getCrosshairPosition())
+            if distance < minDistance then
+                minDistance = distance
+                closest = player
+            end
+        end
+    end
+
+    return closest
+end
+
+function aimAt(target)
+    if config.aim_assist then
+        -- Mira suavemente
+        smoothAim(target.position)
+    else
+        -- Mira direto
+        setCrosshairTo(target.position)
+    end
+end
+
+function removeRecoil()
+    if config.no_recoil then
+        -- Simula a remoção de recuo
+        localPlayer.weapon.recoil = 0
+    end
+end
+
+-- Loop principal
+function mainLoop(players)
+    drawMenu()
+
+    if config.esp_enabled then
+        drawESP(players)
+    end
+
+    if config.aimbot_enabled then
+        local target = getClosestEnemy(players)
+        if target then
+            aimAt(target)
+        end
+    end
+
+    if config.no_recoil then
+        removeRecoil()
+    end
+end
+
+-- Atualiza e imprime menu
+function showMenu()
+    os.execute("clear") -- ou "cls" no Windows
+    print("===================================")
+    print("      Painel negrete - ESP Tool    ")
+    print("===================================")
+    print("1. ESP             :", config.esp_enabled and "Ativado" or "Desativado")
+    print("2. Aimbot          :", config.aimbot_enabled and "Ativado" or "Desativado")
+    print("3. Aim Assist      :", config.aim_assist and "Ativado" or "Desativado")
+    print("4. No Recoil       :", config.no_recoil and "Ativado" or "Desativado")
+    print("5. FOV             :", config.fov)
+    print("6. Team Check      :", config.team_check and "Ativado" or "Desativado")
+    print("-----------------------------------")
+    print("Digite o número da opção para alternar, ou digite 'sair' para encerrar.")
+end
+
+-- Interação com o usuário
+function interfaceLoop()
+    while true do
+        showMenu()
+        io.write(">> ")
+        local input = io.read()
+
+        if input == "1" then config.esp_enabled = not config.esp_enabled
+        elseif input == "2" then config.aimbot_enabled = not config.aimbot_enabled
+        elseif input == "3" then config.aim_assist = not config.aim_assist
+        elseif input == "4" then config.no_recoil = not config.no_recoil
+        elseif input == "5" then
+            io.write("Novo valor para FOV: ")
+            local newFOV = tonumber(io.read())
+            if newFOV then config.fov = newFOV end
+        elseif input == "6" then config.team_check = not config.team_check
+        elseif input == "sair" then break
+        else print("Opção inválida.")
+        end
+    end
+end
